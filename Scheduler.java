@@ -74,9 +74,10 @@ public class Scheduler {
 		for (int i = 0; i<procs.size(); i++){
 			System.out.print("  " + procs.get(i).getA() + " " + procs.get(i).getB() + " " + procs.get(i).getC() + " " + procs.get(i).getio());
 		}
+		System.out.println();
 		//0 = unstarted, 1 = ready, 2 = running, 3 = blocked, 4 = terminated
 		if (verbose){
-			System.out.println("\n\nThis detailed printout gives the state and remaining burst for each process\n");
+			System.out.println("\nThis detailed printout gives the state and remaining burst for each process\n");
 		}	
 		while (num_procs > 0){
 
@@ -85,28 +86,27 @@ public class Scheduler {
 				for (Process p: procs){
 					System.out.printf("%12s %3d ", p.getState(), p.getBurst());
 				}
+				System.out.println();
 			}
-			
-			System.out.println();
-
-			
 			if (blocked.size() > 0){
 				io_util++;
 				for (Process p: blocked){
+					
 					p.subIOBurst();
 					p.addIO_Util();
-					/*p.setState(3);*/
 					if (p.getIOBurst() == 0){
 						p.setState(1);
 						transition_ready.add(p);
-						blocked.remove(p);
 					}
 				}
 				for (Process p: transition_ready){
-					ready.add(transition_ready.poll());
+					ready.add(p);
+					blocked.remove(p);
+				}
+				while (transition_ready.peek() != null){
+					transition_ready.poll();
 				}
 			}
-			
 			
 				//do running process
 			if (running != null){
@@ -122,11 +122,7 @@ public class Scheduler {
 				}
 				//else check if process still running
 				else if (running.getCPUBurst() == 0){
-					//what if burst > io?
 					int io_burst = randomOS(running.getio());
-					if (io_burst > running.getio()){
-						io_burst = running.getio();
-					}
 					running.setIOBurst(io_burst);
 					running.setState(3);
 					blocked.add(running);
@@ -149,15 +145,14 @@ public class Scheduler {
 					running.setState(2);
 					running.clearAge();
 					int cpu_burst = randomOS(running.getB());
-					if (cpu_burst > running.getRemaining()){
-						cpu_burst = running.getRemaining();
-					}
 					running.setCPUBurst(cpu_burst);
 				}
-				for (Process p: ready){
-					p.addWaitTime();
-					p.addAge();
-				}
+				
+			}
+			for (Process p: ready){
+
+				p.addWaitTime();
+				p.addAge();
 			}
 			cycle++;
 		}
@@ -167,6 +162,7 @@ public class Scheduler {
 		
 	}
 	private static void printOut(ArrayList<Process> procs, int cycles, int cpu_util, int io_util){
+		int counter = 0;
 		double num_procs = procs.size();
 		int totalTAT = 0;
 		int totalWaitTime = 0;
@@ -174,12 +170,13 @@ public class Scheduler {
 		for (Process p: procs){
 			totalTAT+=p.getTurnaroundTime();
 			totalWaitTime+=p.getWaitTime();
-			System.out.println("Process " + p.getOrder() + ":");
+			System.out.println("Process " + counter + ":");
 			System.out.printf("\t(A,B,C,D) = (%d,%d,%d,%d)\n",p.getA(),p.getB(),p.getC(),p.getio());
 			System.out.println("\tFinishing time: " + p.getFinishTime() + "\n\t" +
 				"Turnaround time: " + p.getTurnaroundTime() + "\n\t" +
 				"I/O time: " + p.getIO_Util() + "\n\t" +
 				"Waiting time: " + p.getWaitTime() + "\n");
+			counter++;
 		}
 
 		System.out.println("Summary Data: " + "\n\t" +

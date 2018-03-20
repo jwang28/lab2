@@ -52,7 +52,7 @@ public class Process implements Comparable<Process> {
 		if (this.A - p.A != 0){
 			return this.A - p.A;
 		}
-		return p.order - this.order;
+		return this.order - p.order;
 
 	}
 	public int getA(){

@@ -38,6 +38,7 @@ public class Process implements Comparable<Process> {
 		this.IOBurst=0;
 		this.time=0;
 
+		this.IO_Util = 0;
 		this.CPU_Util = 0;
 		this.age = 0;
 
@@ -66,6 +67,9 @@ public class Process implements Comparable<Process> {
 	public int getio(){
 		return this.io;
 	}
+	public int getOrder(){
+		return this.order;
+	}
 	public int getRemaining(){
 		return this.C - this.CPU_Util;
 	}
@@ -90,6 +94,9 @@ public class Process implements Comparable<Process> {
 	public void setFinishTime(int time){
 		this.finishTime = time;
 	}
+	public int getFinishTime(){
+		return this.finishTime;
+	}
 	public int getTurnaroundTime(){
 		return this.finishTime - this.A;
 	}
@@ -99,11 +106,17 @@ public class Process implements Comparable<Process> {
 	public void addCPU_Util(){
 		this.CPU_Util++;
 	}
+	public int getIO_Util(){
+		return this.IO_Util;
+	}
 	public void addIO_Util(){
 		this.IO_Util++;
 	}
 	public void addWaitTime(){
 		this.waitTime++;
+	}
+	public int getWaitTime(){
+		return this.waitTime;
 	}
 	public void clearAge(){
 		this.age = 0;

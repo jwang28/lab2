@@ -161,6 +161,50 @@ public class Scheduler {
 			}
 			cycle++;
 		}
+		System.out.println("The scheduling algorithm used was First Come First Served");
+		printOut(procs, cycle, cpu_util, io_util);
+		
+		
+	}
+	private static void printOut(ArrayList<Process> procs, int cycles, int cpu_util, int io_util){
+		double num_procs = procs.size();
+		int totalTAT = 0;
+		int totalWaitTime = 0;
+		double cycle = cycles - 1;
+		for (Process p: procs){
+			totalTAT+=p.getTurnaroundTime();
+			totalWaitTime+=p.getWaitTime();
+			System.out.println("Process " + p.getOrder() + ":");
+			System.out.printf("\t(A,B,C,D) = (%d,%d,%d,%d)\n",p.getA(),p.getB(),p.getC(),p.getio());
+			System.out.println("\tFinishing time: " + p.getFinishTime() + "\n\t" +
+				"Turnaround time: " + p.getTurnaroundTime() + "\n\t" +
+				"I/O time: " + p.getIO_Util() + "\n\t" +
+				"Waiting time: " + p.getWaitTime() + "\n");
+		}
+
+		System.out.println("Summary Data: " + "\n\t" +
+			"Finishing time: " + cycle + "\n\t" +
+			"CPU Utilization: " + cpu_util/cycle + "\n\t" +
+			"I/O Utilization: " + io_util/cycle + "\n\t" +
+			"Throughput: " + (100/(cycle/num_procs)) + " processes per hundred cycles\n\t" +
+			"Average turnaround time: " + totalTAT/num_procs + "\n\t" +
+			"Average waiting time: " + totalWaitTime/num_procs);
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

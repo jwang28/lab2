@@ -90,28 +90,31 @@ public class Scheduler {
 			System.out.println();
 
 			
-			for (Process p: blocked){
-				if (blocked.peek()!=null){io_util++;}
-				p.subIOBurst();
-				p.addIO_Util();
-				/*p.setState(3);*/
-				if (p.getIOBurst() == 0){
-					p.setState(1);
-					transition_ready.add(p);
-					blocked.remove(p);
+			if (blocked.size() > 0){
+				io_util++;
+				for (Process p: blocked){
+					p.subIOBurst();
+					p.addIO_Util();
+					/*p.setState(3);*/
+					if (p.getIOBurst() == 0){
+						p.setState(1);
+						transition_ready.add(p);
+						blocked.remove(p);
+					}
+				}
+				for (Process p: transition_ready){
+					ready.add(transition_ready.poll());
 				}
 			}
-
-			for (Process p: transition_ready){
-				ready.add(transition_ready.poll());
-			}
+			
+			
 				//do running process
 			if (running != null){
 				running.subCPUBurst();
 				running.addCPU_Util();
 				cpu_util++;
 				//check if process terminates
-				if (running.getCPU_Util() == running.getC()){
+				if (running.getCPU_Util() >= running.getC()){
 					running.setState(4);
 					running.setFinishTime(cycle);
 					running = null;
@@ -120,9 +123,13 @@ public class Scheduler {
 				//else check if process still running
 				else if (running.getCPUBurst() == 0){
 					//what if burst > io?
-					running.setIOBurst(randomOS(running.getio()));
-					blocked.add(running);
+					int io_burst = randomOS(running.getio());
+					if (io_burst > running.getio()){
+						io_burst = running.getio();
+					}
+					running.setIOBurst(io_burst);
 					running.setState(3);
+					blocked.add(running);
 					running=null;
 				}
 				//add pre-empted for round robin
@@ -136,10 +143,11 @@ public class Scheduler {
 			}
 
 			//process ready queue
-			if (ready.peek() != null){
+			if (ready.size() > 0){
 				if (running == null){
 					running = ready.poll();
 					running.setState(2);
+					running.clearAge();
 					int cpu_burst = randomOS(running.getB());
 					if (cpu_burst > running.getRemaining()){
 						cpu_burst = running.getRemaining();
@@ -148,6 +156,7 @@ public class Scheduler {
 				}
 				for (Process p: ready){
 					p.addWaitTime();
+					p.addAge();
 				}
 			}
 			cycle++;

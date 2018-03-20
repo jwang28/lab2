@@ -19,6 +19,8 @@ public class Process implements Comparable<Process> {
 	private int CPU_Util;
 	private int IO_Util;
 
+	private int age;
+
 	public Process (int A, int B, int C, int io, int order){
 		this.A = A;
 		this.B = B;
@@ -37,11 +39,15 @@ public class Process implements Comparable<Process> {
 		this.time=0;
 
 		this.CPU_Util = 0;
+		this.age = 0;
 
 	}
 
 	@Override
 	public int compareTo(Process p){
+		if (this.age != p.age){
+			return (this.age - p.age) * -1;
+		}
 		if (this.A - p.A != 0){
 			return this.A - p.A;
 		}
@@ -98,6 +104,12 @@ public class Process implements Comparable<Process> {
 	}
 	public void addWaitTime(){
 		this.waitTime++;
+	}
+	public void clearAge(){
+		this.age = 0;
+	}
+	public void addAge(){
+		this.age++;
 	}
 	public void setState(int state){
 		this.state = state;

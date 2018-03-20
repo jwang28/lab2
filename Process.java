@@ -4,6 +4,7 @@ public class Process implements Comparable<Process> {
 	private int B;
 	private int C;
 	private int io;
+	private int order;
 
 	private int finishTime;
 	private int turnaroundTime; //do I need this
@@ -18,18 +19,19 @@ public class Process implements Comparable<Process> {
 	private int CPU_Util;
 	private int IO_Util;
 
-	public Process (int A, int B, int C, int io){
+	public Process (int A, int B, int C, int io, int order){
 		this.A = A;
 		this.B = B;
 		this.C = C;
 		this.io = io;
+		this.order = order;
 
 		
 		this.finishTime=0;
 		this.turnaroundTime=0;
 		this.IOTime = 0;
 		this.waitTime=0;
-		this.state=0;
+		this.state=0; //0 = unstarted, 1 = ready, 2 = blocked, 3 = running, 4 = terminated
 		this.CPUBurst = 0;
 		this.IOBurst=0;
 		this.time=0;
@@ -40,6 +42,87 @@ public class Process implements Comparable<Process> {
 
 	@Override
 	public int compareTo(Process p){
-		return this.A - p.A;
+		if (this.A - p.A != 0){
+			return this.A - p.A;
+		}
+		return p.order - this.order;
+
 	}
+	public int getA(){
+		return this.A;
+	}
+	public int getB(){
+		return this.B;
+	}
+	public int getC(){
+		return this.C;
+	}
+	public int getio(){
+		return this.io;
+	}
+	public int getRemaining(){
+		return this.C - this.CPU_Util;
+	}
+	public void setCPUBurst(int burst){
+		this.CPUBurst = burst;
+	}
+	public int getCPUBurst(){
+		return this.CPUBurst;
+	}
+	public void subCPUBurst(){
+		this.CPUBurst--;
+	}
+	public void setIOBurst(int burst){
+		this.IOBurst = burst;
+	}
+	public int getIOBurst(){
+		return this.IOBurst;
+	}
+	public void subIOBurst(){
+		this.IOBurst--;
+	}
+	public void setFinishTime(int time){
+		this.finishTime = time;
+	}
+	public int getTurnaroundTime(){
+		return this.finishTime - this.A;
+	}
+	public int getCPU_Util(){
+		return this.CPU_Util;
+	}
+	public void addCPU_Util(){
+		this.CPU_Util++;
+	}
+	public void addIO_Util(){
+		this.IO_Util++;
+	}
+	public void addWaitTime(){
+		this.waitTime++;
+	}
+	public void setState(int state){
+		this.state = state;
+	}
+	public String getState(){
+		String str;
+		switch (this.state) {
+			case 0: str="unstarted"; break;
+			case 1: str="ready"; break;
+			case 2: str="running"; break;
+			case 3: str="blocked"; break;
+			case 4: str="terminated"; break;
+			default: str=""; break;
+		}
+		return str;
+	}
+	public int getBurst(){
+		
+		if (this.state == 0 || this.state ==1 || this.state==4){
+			return 0;
+		}
+		if (this.state == 2){
+			return this.CPUBurst;
+		}
+		return this.IOBurst;
+	}
+
 }

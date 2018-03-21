@@ -9,7 +9,7 @@ public class Scheduler {
 		ArrayList<Process> fcfsProcs = new ArrayList<Process>();
 		ArrayList<Process> rrProcs = new ArrayList<Process>();
 		ArrayList<Process> uniProcs = new ArrayList<Process>();
-		ArrayList<Process> srtnProcs = new ArrayList<Process>();
+		ArrayList<Process> psjfProcs = new ArrayList<Process>();
 		File f;
 		
 		boolean verbose = false;
@@ -34,7 +34,7 @@ public class Scheduler {
 				fcfsProcs.add(new Process(A,B,C,io,order));
 				rrProcs.add(new Process(A,B,C,io,order));
 				uniProcs.add(new Process(A,B,C,io,order));
-				srtnProcs.add(new Process(A,B,C,io,order));
+				psjfProcs.add(new Process(A,B,C,io,order));
 				order++;
 				System.out.println(A + " " + B + " " +C + " " + io);
 			}
@@ -49,7 +49,9 @@ public class Scheduler {
 			e.printStackTrace();
 		}
 		//fcfs(fcfsProcs, verbose);
-		rr(rrProcs, verbose);
+		//rr(rrProcs, verbose);
+		uni(uniProcs, verbose);
+
 		rand.close();
 	}
 
@@ -263,11 +265,122 @@ public class Scheduler {
 				p.addWaitTime();
 				p.addAge();
 			}
-			//ready.add(p);
 			
 			cycle++;
 		}
 		System.out.println("The scheduling algorithm used was Round Robin");
+		printOut(procs, cycle, cpu_util, io_util);
+	}
+	private static void uni(ArrayList<Process> procs, boolean verbose){
+		int cpu_util=0, io_util=0, cycle = 0,num_procs = procs.size(), total_procs = procs.size();
+		Process running = null;
+		PriorityQueue <Process> almost_ready = new PriorityQueue<Process>(new Comparator<Process>(){
+			@Override
+			public int compare(Process p1, Process p2){
+				return (p1.getPriority() - p2.getPriority());
+			}
+		});
+		PriorityQueue <Process> ready = new PriorityQueue<Process>();
+		/*ArrayList <Process> almost_ready = new ArrayList<Process>();*/
+		PriorityQueue <Process> transition_ready = new PriorityQueue<Process>();
+		PriorityQueue <Process> blocked = new PriorityQueue<Process>();
+
+		System.out.print("The original input was: " + procs.size());
+		for (int i = 0; i<procs.size(); i++){
+			System.out.print("  " + procs.get(i).getA() + " " + procs.get(i).getB() + " " + procs.get(i).getC() + " " + procs.get(i).getio());
+		}
+		Collections.sort(procs);
+		System.out.print("\nThe (sorted) input is:  " + procs.size());
+		for (int i = 0; i<procs.size(); i++){
+			procs.get(i).setPriority(i);
+			System.out.print("  " + procs.get(i).getA() + " " + procs.get(i).getB() + " " + procs.get(i).getC() + " " + procs.get(i).getio());
+		}
+		System.out.println();
+		//0 = unstarted, 1 = ready, 2 = running, 3 = blocked, 4 = terminated
+		if (verbose){
+			System.out.println("\nThis detailed printout gives the state and remaining burst for each process\n");
+		}	
+		while (num_procs > 0){
+
+			if (verbose){
+				System.out.printf("Before cycle %5d:  ", cycle);
+				for (Process p: procs){
+					System.out.printf("%12s %3d ", p.getState(), p.getBurst());
+				}
+				System.out.println();
+			}
+			if (blocked.size() > 0){
+				io_util++;
+				for (Process p: blocked){
+					
+					p.subIOBurst();
+					p.addIO_Util();
+					if (p.getIOBurst() == 0){
+						p.setState(1);
+						transition_ready.add(p);
+					}
+				}
+				for (Process p: transition_ready){
+					ready.add(p);
+					blocked.remove(p);
+				}
+				while (transition_ready.peek() != null){
+					transition_ready.poll();
+				}
+			}
+			
+				//do running process
+			if (running != null){
+				running.subCPUBurst();
+				running.addCPU_Util();
+				cpu_util++;
+				//check if process terminates
+				if (running.getCPU_Util() >= running.getC()){
+					running.setState(4);
+					running.setFinishTime(cycle);
+					running = null;
+					num_procs--;
+				}
+				//else check if process still running
+				else if (running.getCPUBurst() == 0){
+					int io_burst = randomOS(running.getio());
+					running.setIOBurst(io_burst);
+					running.setState(3);
+					blocked.add(running);
+					running=null;
+				}
+			}
+			//process arrival
+			for (Process p: procs){
+				if (p.getA() == cycle){
+					p.setState(1);
+					almost_ready.add(p);
+				}
+			}
+			int cur = total_procs - num_procs;
+			if (ready.size() == 0 && almost_ready.size() > 0){
+				if (cur == almost_ready.peek().getPriority()){
+					ready.add(almost_ready.poll());
+				}
+			}
+
+			//process ready queue
+			if (ready.size() > 0){
+				if (running == null){
+					running = ready.poll();
+					running.setState(2);
+					running.clearAge();
+					int cpu_burst = randomOS(running.getB());
+					running.setCPUBurst(cpu_burst);
+				}	
+			}
+			for (Process p: almost_ready){
+				p.addWaitTime();
+				p.addAge();
+			}
+			cycle++;
+		}
+		System.out.println("The scheduling algorithm used was Uniprogrammed");
 		printOut(procs, cycle, cpu_util, io_util);
 	}
 

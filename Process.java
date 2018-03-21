@@ -21,6 +21,7 @@ public class Process implements Comparable<Process> {
 	private int IO_Util;
 
 	private int age;
+	private int priority;
 
 	public Process (int A, int B, int C, int io, int order){
 		this.A = A;
@@ -43,6 +44,7 @@ public class Process implements Comparable<Process> {
 		this.CPU_Util = 0;
 		this.age = 0;
 		this.quantum = 2;
+		this.priority = 0;
 
 	}
 
@@ -74,6 +76,12 @@ public class Process implements Comparable<Process> {
 	}
 	public int getRemaining(){
 		return this.C - this.CPU_Util;
+	}
+	public int getPriority (){
+		return this.priority;
+	}
+	public void setPriority(int priority){
+		this.priority = priority;
 	}
 	public int getQuantum(){
 		return this.quantum;

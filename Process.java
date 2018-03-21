@@ -56,7 +56,7 @@ public class Process implements Comparable<Process> {
 		if (this.A - p.A != 0){
 			return this.A - p.A;
 		}
-		return this.order - p.order;
+		return this.priority - p.priority;
 
 	}
 	public int getA(){
@@ -70,6 +70,9 @@ public class Process implements Comparable<Process> {
 	}
 	public int getio(){
 		return this.io;
+	}
+	public int getAge(){
+		return this.age;
 	}
 	public int getOrder(){
 		return this.order;
@@ -160,10 +163,10 @@ public class Process implements Comparable<Process> {
 	}
 	public int getBurst(){
 		
-		if (this.state == 0 || this.state ==1 || this.state==4){
+		if (this.state == 0 || this.state==4){
 			return 0;
 		}
-		if (this.state == 2){
+		if (this.state == 2 || this.state == 1){
 			return this.CPUBurst;
 		}
 		return this.IOBurst;

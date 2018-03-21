@@ -5,6 +5,7 @@ public class Process implements Comparable<Process> {
 	private int C;
 	private int io;
 	private int order;
+	private int quantum;
 
 	private int finishTime;
 	private int turnaroundTime; //do I need this
@@ -41,6 +42,7 @@ public class Process implements Comparable<Process> {
 		this.IO_Util = 0;
 		this.CPU_Util = 0;
 		this.age = 0;
+		this.quantum = 2;
 
 	}
 
@@ -72,6 +74,15 @@ public class Process implements Comparable<Process> {
 	}
 	public int getRemaining(){
 		return this.C - this.CPU_Util;
+	}
+	public int getQuantum(){
+		return this.quantum;
+	}
+	public void subQuantum(){
+		this.quantum--;
+	}
+	public void setQuantum(){
+		this.quantum = 2;
 	}
 	public void setCPUBurst(int burst){
 		this.CPUBurst = burst;

@@ -48,7 +48,8 @@ public class Scheduler {
 		} catch (Exception e){
 			e.printStackTrace();
 		}
-		fcfs(fcfsProcs, verbose);
+		//fcfs(fcfsProcs, verbose);
+		rr(rrProcs, verbose);
 		rand.close();
 	}
 
@@ -59,7 +60,7 @@ public class Scheduler {
 	}
 
 	private static void fcfs(ArrayList<Process> procs, boolean verbose){
-		int cpu_util=0, io_util=0, cycle = 0,num_procs = procs.size(), num_terminated = 0;
+		int cpu_util=0, io_util=0, cycle = 0,num_procs = procs.size();/* num_terminated = 0;*/
 		Process running = null;
 		PriorityQueue <Process> ready = new PriorityQueue<Process>();
 		PriorityQueue <Process> transition_ready = new PriorityQueue<Process>();
@@ -146,11 +147,9 @@ public class Scheduler {
 					running.clearAge();
 					int cpu_burst = randomOS(running.getB());
 					running.setCPUBurst(cpu_burst);
-				}
-				
+				}	
 			}
 			for (Process p: ready){
-
 				p.addWaitTime();
 				p.addAge();
 			}
@@ -158,9 +157,120 @@ public class Scheduler {
 		}
 		System.out.println("The scheduling algorithm used was First Come First Served");
 		printOut(procs, cycle, cpu_util, io_util);
-		
-		
 	}
+	
+	private static void rr(ArrayList<Process> procs, boolean verbose){
+		int cpu_util=0, io_util=0, cycle = 0,num_procs = procs.size();
+		Process running = null;
+		PriorityQueue <Process> ready = new PriorityQueue<Process>();
+		PriorityQueue <Process> transition_ready = new PriorityQueue<Process>();
+		PriorityQueue <Process> blocked = new PriorityQueue<Process>();
+
+		System.out.print("The original input was: " + procs.size());
+		for (int i = 0; i<procs.size(); i++){
+			System.out.print("  " + procs.get(i).getA() + " " + procs.get(i).getB() + " " + procs.get(i).getC() + " " + procs.get(i).getio());
+		}
+		Collections.sort(procs);
+		System.out.print("\nThe (sorted) input is:  " + procs.size());
+		for (int i = 0; i<procs.size(); i++){
+			System.out.print("  " + procs.get(i).getA() + " " + procs.get(i).getB() + " " + procs.get(i).getC() + " " + procs.get(i).getio());
+		}
+		System.out.println();
+		//0 = unstarted, 1 = ready, 2 = running, 3 = blocked, 4 = terminated
+		if (verbose){
+			System.out.println("\nThis detailed printout gives the state and remaining burst for each process\n");
+		}	
+		while (num_procs > 0){
+
+			if (verbose){
+				System.out.printf("Before cycle %5d:  ", cycle);
+				for (Process p: procs){
+					System.out.printf("%12s %3d ", p.getState(), p.getBurst());
+				}
+				System.out.println();
+			}
+			if (blocked.size() > 0){
+				io_util++;
+				for (Process p: blocked){
+					
+					p.subIOBurst();
+					p.addIO_Util();
+					if (p.getIOBurst() == 0){
+						p.setState(1);
+						transition_ready.add(p);
+					}
+				}
+				for (Process p: transition_ready){
+					blocked.remove(p);
+				}
+			}
+			
+				//do running process
+			if (running != null){
+				running.subCPUBurst();
+				running.addCPU_Util();
+				running.subQuantum();
+				cpu_util++;
+				//check if process terminates
+				if (running.getCPU_Util() >= running.getC()){
+					running.setState(4);
+					running.setFinishTime(cycle);
+					running = null;
+					num_procs--;
+				}
+				//else check if process still running
+				else if (running.getCPUBurst() == 0){
+					int io_burst = randomOS(running.getio());
+					running.setIOBurst(io_burst);
+					running.setState(3);
+					blocked.add(running);
+					running=null;
+				}
+				//add pre-empt for round robin
+				else if (running.getQuantum() == 0){
+					transition_ready.add(running);
+					running = null;
+				}
+			}
+			//process arrival
+			for (Process p: procs){
+				if (p.getA() == cycle){
+					p.setState(1);
+					ready.add(p);
+				}
+			}
+			for (Process p: transition_ready){
+				ready.add(p);
+			}
+			while (transition_ready.peek() != null){
+				transition_ready.poll();
+			}
+
+			//process ready queue
+			if (ready.size() > 0){
+				if (running == null){
+					running = ready.poll();
+					running.setState(2);
+					running.clearAge();
+					if (running.getCPUBurst() == 0){
+						int cpu_burst = randomOS(running.getB());
+						running.setCPUBurst(cpu_burst);
+					}
+					running.setQuantum();	
+				}	
+			}
+			for (Process p: ready){
+				p.addWaitTime();
+				p.addAge();
+			}
+			//ready.add(p);
+			
+			cycle++;
+		}
+		System.out.println("The scheduling algorithm used was Round Robin");
+		printOut(procs, cycle, cpu_util, io_util);
+	}
+
 	private static void printOut(ArrayList<Process> procs, int cycles, int cpu_util, int io_util){
 		int counter = 0;
 		double num_procs = procs.size();
